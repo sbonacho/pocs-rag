@@ -15,12 +15,15 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
 @RequestMapping("/docs")
+@Slf4j
 public class DocController {
 
     private final ChatClient chatClient;
@@ -40,7 +43,11 @@ public class DocController {
         PromptTemplate promptTemplate = new PromptTemplate(stPromptTemplate);
         var promptParameters = new HashMap<String, Object>();
         promptParameters.put("input", query);
-        promptParameters.put("documents", String.join("\n", this.findSimilarDocuments(query)));
+        String context = String.join("\n", this.findSimilarDocuments(query));
+        int tokenCount = context.split("\\s+").length;
+        log.info(context);
+        log.info("Found {} tokens in similar documents", tokenCount);
+        promptParameters.put("documents", context);
         
                 var prompt = promptTemplate.create(promptParameters);
                 var response = this.chatClient.prompt(prompt).call().chatResponse();
